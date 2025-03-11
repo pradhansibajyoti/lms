@@ -1,5 +1,6 @@
 import express from "express";
 import  User  from "../model/user.model.js";
+
 const registerUser = async (req, res) => {
     // res.send("Hello World");
     try{
