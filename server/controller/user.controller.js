@@ -1,6 +1,8 @@
 import express from "express";
+import fs from 'fs/promises';
 import  User  from "../model/user.model.js";
 import upload from "../middleware/upload.middleware.js";
+import cloudinary from 'cloudinary';
 const registerUser = async (req, res) => {
     // res.send("Hello World");
     try{
@@ -23,6 +25,29 @@ const registerUser = async (req, res) => {
             password,
             avatar: req.file.path  // Store the file path in the database (or URL if using cloud storage)
         });
+
+        if (req.file) {
+            try {
+              const result = await cloudinary.v2.uploader.upload(req.file.path, {
+                folder: 'lms', // Save files in a folder named lms
+                width: 250,
+                height: 250,
+                gravity: 'faces', // This option tells cloudinary to center the image around detected faces (if any) after cropping or resizing the original image
+                crop: 'fill',
+              });
+        
+              // If success
+              if (result) {
+                // Set the public_id and secure_url in DB
+                user.avatar = result.secure_url;
+        
+                // After successful upload remove the file from local storage
+                fs.rm(`uploads/user_images/${req.file.filename}`);
+              }
+            } catch (error) {
+              
+            }
+          }
     const savedUser=await user.save();
     res.status(201).json({ message: "User registered successfully" ,user:savedUser});
     }
